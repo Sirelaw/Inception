@@ -1,0 +1,1 @@
+openssl req -x509 -nodes -days 365 -subj "/C=CA/ST=QC/O=oipadeol, Inc./CN=oipadeol.42.fr" -addext "subjectAltName=DNS:oipadeol.42.fr" -newkey rsa:2048 -keyout ./certs/selfsigned.key -out ./certs/selfsigned.crt;

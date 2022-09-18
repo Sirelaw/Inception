@@ -1,0 +1,97 @@
+services:
+  ngnix:
+    container_name: nginx
+    depends_on:
+      - wordpress
+      - db
+    build: ./requirements/nginx/
+    ports: 
+      - "443:443"
+    volumes:
+      - www:/home/www/
+      - ./requirements/bonus/mysite:/home/www/mysite
+    networks: 
+      - wordpress_network
+  
+  wordpress:
+    container_name: wordpress
+    depends_on:
+      - db
+      - redis
+    build: ./requirements/wordpress
+    volumes:
+      - www:/home/www/
+    networks:
+      - wordpress_network
+      - database_network
+    env_file:
+      - .env
+
+  db:
+    container_name: db
+    build: ./requirements/mariadb
+    ports:
+      - "3306:3306"
+    restart: always
+    volumes:
+      - db:/var/lib/mysql
+    user: mysql
+    networks:
+      - database_network
+    environment:
+        DB_NAME: ${DB_NAME}
+        DB_ADMIN: ${DB_ADMIN}
+        DB_ADMIN_PASS: ${DB_ADMIN_PASS}
+        DB_ROOT_PASS: ${DB_ROOT_PASS}
+
+  ftp:
+    container_name: ftp
+    depends_on:
+      - wordpress
+    build: ./requirements/bonus/ftp
+    volumes:
+      - www:/var/www/html
+    networks:
+      - wordpress_network
+    environment:
+      FTP_USER: ${FTP_USER}
+      FTP_PASS: ${FTP_PASS}
+    ports:
+      - "21:21"
+      - "21100-21110:21100-21110"
+  
+  php-my-admin:
+    container_name: php-my-admin
+    build: ./requirements/bonus/php-my-admin
+    volumes:
+      - www:/var/www/html
+
+  redis:
+    container_name: redis
+    depends_on:
+      - db
+    build: ./requirements/bonus/redis
+    networks:
+      - wordpress_network
+    environment:
+      DB_HOST: ${DB_HOST}
+
+volumes:
+  db:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /home/$USER/data/db
+  www:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /home/$USER/data/www
+
+networks:
+  wordpress_network:
+  database_network:
+
+
